@@ -1,24 +1,17 @@
-# [Example WASI proposal]
-
-This template can be used to start a new proposal, which can then be proposed in the WASI Subgroup meetings.
-
-The sections below are recommended. However, every proposal is different, and the community can help you flesh out the proposal, so don't block on having something filled in for each one of them.
-
-Thank you to the W3C Privacy CG for the [inspiration](https://github.com/privacycg/template)!
-
-# [Title]
+# WASI Pattern Match APIs
 
 A proposed [WebAssembly System Interface](https://github.com/WebAssembly/WASI) API.
 
 ### Current Phase
 
-[Fill in the current phase, e.g. Phase 1]
+`wasi-pattern-match` is currently in [Phase 1](https://github.com/WebAssembly/WASI/blob/42fe2a3ca159011b23099c3d10b5b1d9aff2140e/docs/Proposals.md#phase-1---feature-proposal-cg).
 
 ### Champions
 
-- [Champion 1]
-- [Champion 2]
-- [etc.]
+- [Andrew Brown](https://github.com/abrown)
+- [Jianjun Zhu](https://github.com/jianjunz)
+- [Johnnie Birch](https://github.com/jlb6740)
+- [Mingqiu Sun](https://github.com/mingqiusun)
 
 ### Phase 4 Advancement Criteria
 
@@ -27,45 +20,70 @@ TODO before entering Phase 2.
 ## Table of Contents [if the explainer is longer than one printed page]
 
 - [Introduction](#introduction)
-- [Goals [or Motivating Use Cases, or Scenarios]](#goals-or-motivating-use-cases-or-scenarios)
+- [Goals](#goals)
 - [Non-goals](#non-goals)
 - [API walk-through](#api-walk-through)
-  - [Use case 1](#use-case-1)
-  - [Use case 2](#use-case-2)
+  - [Scan a block of data](#scan-a-block-of-data)
+  - [Scan a stream](#scan-a-stream)
 - [Detailed design discussion](#detailed-design-discussion)
   - [[Tricky design choice 1]](#tricky-design-choice-1)
   - [[Tricky design choice 2]](#tricky-design-choice-2)
 - [Considered alternatives](#considered-alternatives)
-  - [[Alternative 1]](#alternative-1)
-  - [[Alternative 2]](#alternative-2)
 - [Stakeholder Interest & Feedback](#stakeholder-interest--feedback)
 - [References & acknowledgements](#references--acknowledgements)
 
 ### Introduction
 
-[The "executive summary" or "abstract". Explain in a few sentences what the goals of the project are, and a brief overview of how the solution works. This should be no more than 1-2 paragraphs.]
+`wasi-pattern-match` is a WASI API for scanning data and finding out matches with high performance and low latency.
 
-### Goals [or Motivating Use Cases, or Scenarios]
+### Goals
 
-[What is the end-user need which this project aims to address?]
+- Support PCRE syntax (or subset)
+- API: iterate over matches, find the first match, check existence
+- Improve upon current WebAssembly performance
+
 
 ### Non-goals
 
-[If there are "adjacent" goals which may appear to be in scope but aren't, enumerate them here. This section may be fleshed out as your design progresses and you encounter necessary technical and other trade-offs.]
+- Not all of the PCRE APIs are supported, e.g.: string replacement
+
 
 ### API walk-through
 
-The full API documentation can be found [here](wasi-proposal-template.md).
+Initial draft. APIs are subject to change.
 
-[Walk through of how someone would use this API.]
 
-#### [Use case 1]
+#### Scan a block of data
 
-[Provide example code snippets and diagrams explaining how the API would be used to solve the given problem]
+This example creates a scanner with a given pattern, then uses the scanner to scan a block of data to get the number of email addresses.
 
-#### [Use case 2]
+```
+Scanner scanner = create_scanner(["email pattern"]);
+Scan result = scan_block(scanner, buffer);
+println!("Number of email addresses in the block: {}", all_matches(result).len());
+close_scanner(scanner)
+```
 
-[etc.]
+#### Scan a stream
+
+This example creates a scanner with given patterns, then uses the scanner to scan a stream to detect dangerous traffic.
+
+```
+Scanner scanner = create_scanner(["dangerous url", "credit card", "phone number"]);
+Stream stream = create_stream(scanner);
+while (!eos) {
+  // Keep reading chunks from a network level stream, or an application level stream.
+  Scan result = scan_stream(stream, chunk);
+  if (has_match(result)) {
+    // Detected dangerous traffic, drop the connection or return an error code.
+  } else {
+    // Continue.
+  }
+}
+close_stream(stream)
+close_scanner(scanner)
+```
+
 
 ### Detailed design discussion
 
@@ -87,15 +105,8 @@ The full API documentation can be found [here](wasi-proposal-template.md).
 
 ### Considered alternatives
 
-[This section is not required if you already covered considered alternatives in the design discussion above.]
+If a WASM runtime does not support this API, please consider to compile a regex framework to WebAssembly.
 
-#### [Alternative 1]
-
-[Describe an alternative which was considered, and why you decided against it.]
-
-#### [Alternative 2]
-
-[etc.]
 
 ### Stakeholder Interest & Feedback
 
